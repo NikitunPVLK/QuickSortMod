@@ -164,7 +164,7 @@ namespace QuickSortMod
                 String itemName = containerItem.m_shared.m_name;
                 foreach (ItemDrop.ItemData playerItem in playerInventory.m_inventory)
                 {
-                    if (itemName.Equals(playerItem.m_shared.m_name))
+                    if (itemName.Equals(playerItem.m_shared.m_name) && !playerItem.m_equipped)
                     {
                         itemsToStack.Add(playerItem);
                     }
