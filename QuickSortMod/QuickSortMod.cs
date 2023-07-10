@@ -9,6 +9,7 @@ using Jotunn.Utils;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Linq;
 using System.Reflection;
 using UnityEngine;
 
@@ -51,8 +52,8 @@ namespace QuickSortMod
         private void CreateConfigValues()
         {
             Config.SaveOnConfigSet = true;
-            InventorySortSpecialConfig = Config.Bind("Client config", "Inventory Sorting", KeyCode.R, new ConfigDescription("Key to sort your inventory"));
-            QuickStackSpecialConfig = Config.Bind("Client config", "Quick Stack", KeyCode.T, new ConfigDescription("Key to quick stack items to container"));
+            InventorySortSpecialConfig = Config.Bind("Client_config", "Inventory Sorting", KeyCode.R, new ConfigDescription("Key to sort your inventory"));
+            QuickStackSpecialConfig = Config.Bind("Client_config", "Quick Stack", KeyCode.T, new ConfigDescription("Key to quick stack items to container"));
         }
 
         private void AddInputs()
