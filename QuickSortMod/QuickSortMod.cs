@@ -100,7 +100,12 @@ namespace QuickSortMod
                     if (ZInput.GetButtonDown(InventorySortSpecialButton.Name) && MessageHud.instance.m_msgQeue.Count == 0)
                     {
                         MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, "$quicksort_inventorysort");
-                        Sort();
+                        Sort(Player.m_localPlayer.GetInventory(), 1);
+
+                        if (currentContainer != null && currentContainer.GetInventory() != null && currentContainer.IsInUse())
+                        {
+                            Sort(currentContainer.GetInventory(), 0);
+                        }
                     }
                 }
                 
@@ -120,12 +125,11 @@ namespace QuickSortMod
             }
         }
 
-        private void Sort()
+        private void Sort(Inventory inventory, int startY) 
         {
-            Inventory inventory = Player.m_localPlayer.GetInventory();
             List<ComparableItem> items = new List<ComparableItem>();
 
-            for (int y = 1; y < inventory.m_height; y++)
+            for (int y = startY; y < inventory.m_height; y++)
             {
                 for (int x = 0; x < inventory.m_width; x++)
                 {
