@@ -51,8 +51,8 @@ namespace QuickSortMod
         private void CreateConfigValues()
         {
             Config.SaveOnConfigSet = true;
-            InventorySortSpecialConfig = Config.Bind("Client config", "Inventory Sorting", KeyCode.Home, new ConfigDescription("Key to sort your inventory"));
-            QuickStackSpecialConfig = Config.Bind("Client config", "Quick Stack", KeyCode.Insert, new ConfigDescription("Key to quick stack items to container"));
+            InventorySortSpecialConfig = Config.Bind("Client config", "Inventory Sorting", KeyCode.R, new ConfigDescription("Key to sort your inventory"));
+            QuickStackSpecialConfig = Config.Bind("Client config", "Quick Stack", KeyCode.T, new ConfigDescription("Key to quick stack items to container"));
         }
 
         private void AddInputs()
