@@ -1,5 +1,6 @@
 using BepInEx;
 using BepInEx.Configuration;
+using HarmonyLib;
 using Jotunn;
 using Jotunn.Configs;
 using Jotunn.Entities;
@@ -8,6 +9,7 @@ using Jotunn.Utils;
 using System;
 using System.Collections.Generic;
 using System.Dynamic;
+using System.Reflection;
 using UnityEngine;
 
 namespace QuickSortMod
@@ -28,6 +30,11 @@ namespace QuickSortMod
         private ConfigEntry<KeyCode> InventorySortSpecialConfig;
         private ButtonConfig InventorySortSpecialButton;
 
+        private ConfigEntry<KeyCode> QuickStackSpecialConfig;
+        private ButtonConfig QuickStackSpecialButton;
+
+        public static Container currentContainer;
+
         private void Awake()
         {
             // Jotunn comes with its own Logger class to provide a consistent Log style for all mods using it
@@ -36,6 +43,8 @@ namespace QuickSortMod
             CreateConfigValues();
             AddInputs();
             AddLocalizations();
+
+            Harmony.CreateAndPatchAll(Assembly.GetExecutingAssembly(), null);
         }
 
 
@@ -43,6 +52,7 @@ namespace QuickSortMod
         {
             Config.SaveOnConfigSet = true;
             InventorySortSpecialConfig = Config.Bind("Client config", "Inventory Sorting", KeyCode.Home, new ConfigDescription("Key to sort your inventory"));
+            QuickStackSpecialConfig = Config.Bind("Client config", "Quick Stack", KeyCode.Insert, new ConfigDescription("Key to quick stack items to container"));
         }
 
         private void AddInputs()
@@ -56,6 +66,16 @@ namespace QuickSortMod
                 BlockOtherInputs = true
             };
             InputManager.Instance.AddButton(PluginGUID, InventorySortSpecialButton);
+
+            QuickStackSpecialButton = new ButtonConfig
+            {
+                Name = "QuickSortMod_QuickStack",
+                ActiveInGUI = true,
+                ActiveInCustomGUI = true,
+                Config = QuickStackSpecialConfig,
+                BlockOtherInputs = true
+            };
+            InputManager.Instance.AddButton(PluginGUID, QuickStackSpecialButton);
         }
 
         private void AddLocalizations()
@@ -65,31 +85,46 @@ namespace QuickSortMod
 
             Localization.AddTranslation("English", new Dictionary<string, string>
             {
-                {"$inventorysort_inventorysort", "Inventory sorted"}
+                {"$quicksort_inventorysort", "Inventory sorted"},
+                {"$quicksort_quickstack", "Items stacked" }
             });
         }
 
         private void Update()
         {
+
             if (ZInput.instance != null)
             {
                 if (InventorySortSpecialButton != null && MessageHud.instance != null && Player.m_localPlayer != null && InventoryGui.IsVisible())
                 {
-                   
                     if (ZInput.GetButtonDown(InventorySortSpecialButton.Name) && MessageHud.instance.m_msgQeue.Count == 0)
                     {
-                        MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, "$inventorysort_inventorysort");
+                        MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, "$quicksort_inventorysort");
                         Sort();
                     }
                 }
+                
+                
+                if (QuickStackSpecialButton != null && MessageHud.instance != null && Player.m_localPlayer != null && InventoryGui.IsVisible())
+                {
+                    if (ZInput.GetButtonDown(QuickStackSpecialButton.Name) && MessageHud.instance.m_msgQeue.Count == 0)
+                    {
+                        if (currentContainer != null && currentContainer.GetInventory() != null && currentContainer.IsInUse())
+                        {
+                            MessageHud.instance.ShowMessage(MessageHud.MessageType.Center, "$quicksort_quickstack");
+                            StackItems();
+                        }
+                    }
+                }
+                
             }
         }
-            
+
         private void Sort()
         {
             Inventory inventory = Player.m_localPlayer.GetInventory();
             List<ComparableItem> items = new List<ComparableItem>();
-            
+
             for (int y = 1; y < inventory.m_height; y++)
             {
                 for (int x = 0; x < inventory.m_width; x++)
@@ -114,7 +149,31 @@ namespace QuickSortMod
             }
         }
 
-        
+        private void StackItems()
+        {
+            Inventory containerInventory = currentContainer.GetInventory();
+            Inventory playerInventory = Player.m_localPlayer.GetInventory();
+            List<ItemDrop.ItemData> itemsToStack = new List<ItemDrop.ItemData>();
+            foreach (ItemDrop.ItemData containerItem in containerInventory.m_inventory)
+            {
+                String itemName = containerItem.m_shared.m_name;
+                foreach (ItemDrop.ItemData playerItem in playerInventory.m_inventory)
+                {
+                    if (itemName.Equals(playerItem.m_shared.m_name))
+                    {
+                        itemsToStack.Add(playerItem);
+                    }
+                }
+                
+            }
+            foreach (ItemDrop.ItemData item in itemsToStack)
+            {
+                if(containerInventory.CanAddItem(item) && containerInventory.AddItem(item))
+                {
+                    playerInventory.RemoveItem(item);
+                }
+            }
+        }
 
         private class ComparableItem : IComparable<ComparableItem>
         {
@@ -128,6 +187,15 @@ namespace QuickSortMod
             public int CompareTo(ComparableItem otherItem)
             {
                 return item.m_shared.m_name.CompareTo(otherItem.item.m_shared.m_name);
+            }
+        }
+
+        [HarmonyPatch(typeof(Container), "RPC_OpenRespons")]
+        static class Container_RPC_OpenRespons_Patch
+        {
+            private static void Postfix(Container __instance, ZNetView ___m_nview)
+            {
+                currentContainer = __instance;
             }
         }
     }
