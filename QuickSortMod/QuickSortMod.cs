@@ -137,7 +137,7 @@ namespace QuickSortMod
                     ItemDrop.ItemData item = inventory.GetItemAt(x, y);
                     if (item != null)
                     {
-                        if (!item.m_equipped && !item.IsEquipable() && item.m_shared.m_food == 0)
+                        if (!item.IsEquipable() && item.m_shared.m_food == 0)
                         {
                             items.Add(new ComparableItem(item));
                             inventory.RemoveItem(item);
@@ -164,7 +164,7 @@ namespace QuickSortMod
                 String itemName = containerItem.m_shared.m_name;
                 foreach (ItemDrop.ItemData playerItem in playerInventory.m_inventory)
                 {
-                    if (itemName.Equals(playerItem.m_shared.m_name) && !playerItem.m_equipped)
+                    if (itemName.Equals(playerItem.m_shared.m_name) && !playerItem.IsEquipable() && playerItem.m_shared.m_food == 0)
                     {
                         itemsToStack.Add(playerItem);
                     }
