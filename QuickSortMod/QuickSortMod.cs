@@ -137,7 +137,7 @@ namespace QuickSortMod
                     ItemDrop.ItemData item = inventory.GetItemAt(x, y);
                     if (item != null)
                     {
-                        if (!item.m_equipped)
+                        if (!item.m_equipped && !item.IsEquipable() && item.m_shared.m_food == 0)
                         {
                             items.Add(new ComparableItem(item));
                             inventory.RemoveItem(item);
